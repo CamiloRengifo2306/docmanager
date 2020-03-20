@@ -1,58 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_native_html_view/flutter_native_html_view.dart';
 import 'package:docmanager/src/utils/strings_app.dart';
 import 'package:docmanager/src/utils/colors_app.dart';
 import 'package:docmanager/src/utils/locations.dart';
+import 'package:docmanager/src/document/models/DocumentModel.dart';
 
-class SearchView extends StatelessWidget {
-
-  final kHtml = """
-  <h1>Heading</h1>
-  <p>A paragraph with <strong>strong</strong> <em>emphasized</em> text.</p>
-  <ol>
-    <li>List item number one</li>
-    <li>
-      Two
-      <ul>
-        <li>2.1 (nested)</li>
-        <li>2.2</li>
-      </ul>
-    </li>
-    <li>Three</li>
-  </ol>
-  <p>And YouTube video!</p>
-  <iframe src="https://www.youtube.com/embed/jNQXAC9IVRw" width="560" height="315"></iframe>
-  <h1>Heading</h1>
-  <p>A paragraph with <strong>strong</strong> <em>emphasized</em> text.</p>
-  <ol>
-    <li>List item number one</li>
-    <li>
-      Two
-      <ul>
-        <li>2.1 (nested)</li>
-        <li>2.2</li>
-      </ul>
-    </li>
-    <li>Three</li>
-  </ol>
-  <p>And YouTube video!</p>
-  <iframe src="https://www.youtube.com/embed/jNQXAC9IVRw" width="560" height="315"></iframe>
-  <h1>Heading</h1>
-  <p>A paragraph with <strong>strong</strong> <em>emphasized</em> text.</p>
-  <ol>
-    <li>List item number one</li>
-    <li>
-      Two
-      <ul>
-        <li>2.1 (nested)</li>
-        <li>2.2</li>
-      </ul>
-    </li>
-    <li>Three</li>
-  </ol>
-  <p>And YouTube video!</p>
-  <iframe src="https://www.youtube.com/embed/jNQXAC9IVRw" width="560" height="315"></iframe>
-  """;
+class SearchWebView extends StatelessWidget {
 
   @override
   Widget build( BuildContext context ) {
@@ -71,7 +25,7 @@ class SearchView extends StatelessWidget {
       body: Column(
           children: <Widget>[
             _getSearchMenu( widthPage, heightPage, context ),
-            _getHtmlView( widthPage, heightPage ),
+            _HtmlView(),
           ]
       ),
       bottomNavigationBar: Container(
@@ -108,11 +62,6 @@ class SearchView extends StatelessWidget {
             ListTile( 
               leading : Icon( Icons.search ), 
               title : Text( StringsApp.search_app_bar ),
-              onTap: () => Navigator.pushNamed( context, Location.search )
-            ),
-            ListTile( 
-              leading : Icon( Icons.search ), 
-              title : Text( 'Web' ),
               onTap: () => Navigator.pushNamed( context, Location.web )
             ),
             ListTile(
@@ -300,27 +249,6 @@ class SearchView extends StatelessWidget {
     );
   }
 
-  /// Return the html viewer to show data.
-  Widget _getHtmlView( double widthPage, double heightPage ) {
-    return Expanded( 
-      child: ListView.builder(
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        itemCount: 1,
-        itemBuilder: ( BuildContext context, int index) {
-          return Column(
-              children: <Widget>[
-                HtmlWidget(
-                  kHtml,
-                  webView: true
-                )
-              ],
-          );
-        }
-      )
-    );
-  }
-
   /// Return the BottomAppBar with optons.
   Widget _getBottomAppBar() {
     return BottomAppBar(
@@ -329,46 +257,11 @@ class SearchView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            _getFirstRowBottom(),
+            _FirstRowBottom(),
             _getSecondRowBottom()
           ],
         )
       );
-  }
-
-  /// Return first row of icons to show in bottomAppBar.
-  Widget _getFirstRowBottom() {
-    return Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            IconButton(
-              color : ColorsApp.secondaryColor,
-              icon : Icon( Icons.first_page ),
-              onPressed : () {}
-            ),
-            IconButton(
-              color : ColorsApp.secondaryColor,
-              icon: Icon( Icons.chevron_left ),
-              onPressed: () {}
-            ),
-            Text(
-               '1/5',
-               style: TextStyle(
-                 color: ColorsApp.secondaryColor
-               )
-            ),
-            IconButton(
-              color: ColorsApp.secondaryColor,
-              icon : Icon( Icons.chevron_right ),
-              onPressed: () {}
-            ),
-            IconButton(
-              color : ColorsApp.secondaryColor,
-              icon : Icon( Icons.last_page ),
-              onPressed: () {}
-            )
-          ],
-        );
   }
 
   /// Return the second row of icons to show in bottomAppBar.
@@ -393,5 +286,67 @@ class SearchView extends StatelessWidget {
         )
       ],
     );
+  }
+}
+
+/// Return the html viewer to show data.
+class _HtmlView extends StatelessWidget {
+
+  @override
+  Widget build( BuildContext context ) {
+    return Consumer<DocumentModel>(
+        builder: ( context, document, child){
+          return Expanded( 
+            child: FlutterNativeHtmlView( 
+              htmlData: '${document.htmlText}',
+              onLinkTap: (String url) {},
+              onError: (String message) {
+                print('Error FlutterNativeHtml: $message');
+              }
+            )
+          );
+        }
+    );
+  }
+}
+
+/// Return first row of icons to show in bottomAppBar.
+class _FirstRowBottom extends StatelessWidget {
+  
+  @override
+  Widget build( BuildContext context ) {
+    var documentProvider = Provider.of<DocumentModel>( context );
+
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          IconButton(
+            color : ColorsApp.secondaryColor,
+            icon : Icon( Icons.first_page ),
+            onPressed : () => documentProvider.onReDocument()
+          ),
+          IconButton(
+            color : ColorsApp.secondaryColor,
+            icon: Icon( Icons.chevron_left ),
+            onPressed: () => documentProvider.onPreviusDocument()
+          ),
+          Text(
+              '${documentProvider.currentIndex + 1}/${documentProvider.documents.length}',
+              style: TextStyle(
+                color: ColorsApp.secondaryColor
+              )
+          ),
+          IconButton(
+            color: ColorsApp.secondaryColor,
+            icon : Icon( Icons.chevron_right ),
+            onPressed: () => documentProvider.onNextDocument()
+          ),
+          IconButton(
+            color : ColorsApp.secondaryColor,
+            icon : Icon( Icons.last_page ),
+            onPressed: () => documentProvider.onAvDocument()
+          )
+        ],
+      );
   }
 }

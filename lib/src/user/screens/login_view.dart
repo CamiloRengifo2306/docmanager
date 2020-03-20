@@ -118,7 +118,7 @@ class LoginView extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4)
               ),
-              onPressed: () => Navigator.pushNamed( context, Location.search )
+              onPressed: () => Navigator.pushNamed( context, Location.web )
             );
   }
 }
